@@ -1,9 +1,8 @@
-name: Release
+name: manual_run
 
 on:
-  push:
-    tags:
-      - 'v[0-9].*'  # This pattern matches tags starting with "v" followed by digits
+  # Allow manual execution with the "Run workflow" button
+  workflow_dispatch:
 
 jobs:
   release:
