@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9].*'  # This pattern matches tags starting with "v" followed by digits
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write  # Adjust permissions based on specific needs
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: ./utils/dependencies.sh
+
+      - name: Build MEGAsync
+        run: ./utils/build.sh
+
+      - name: Create AppImage
+        run: ./utils/package.sh
+
+      - name: Create GitHub release (consider using a minimal scope token)
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          # Consider using a personal access token with minimal permissions (e.g., repo)
+          # stored in GitHub Secrets and referenced like this:
+          # GITHUB_TOKEN: ${{ secrets.MY_RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}  # Using pre-built token for now (limited permissions)
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload AppImage
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          # Consider using a minimal scope token (same as create-release)
+          GITHUB_TOKEN: ${{ github.token }}  # Using pre-built token for now (limited permissions)
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./MEGAsync-x86_64.AppImage
+          asset_name: MEGAsync-x86_64.AppImage
+          asset_content_type: application/octet-stream
+
+      - name: Print URL
+        run: |
+          echo "Release: ${{ steps.create-release.outputs.html_url }}"
+          echo "AppImage: ${{ steps.upload-release-asset.outputs.browser_download_url }}"
