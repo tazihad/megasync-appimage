@@ -3,14 +3,14 @@ name: Release
 on:
   push:
     tags:
-    - 'v[0-9].*'
+      - 'v[0-9].*'  # This pattern matches tags starting with "v" followed by digits
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-22.04
     permissions:
-      contents: write
+      contents: write  # Adjust permissions based on specific needs
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -26,11 +26,14 @@ jobs:
       - name: Create AppImage
         run: ./utils/package.sh
 
-      - name: Create GitHub release
+      - name: Create GitHub release (consider using a minimal scope token)
         id: create-release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          # Consider using a personal access token with minimal permissions (e.g., repo)
+          # stored in GitHub Secrets and referenced like this:
+          # GITHUB_TOKEN: ${{ secrets.MY_RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}  # Using pre-built token for now (limited permissions)
         with:
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
@@ -41,7 +44,8 @@ jobs:
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          # Consider using a minimal scope token (same as create-release)
+          GITHUB_TOKEN: ${{ github.token }}  # Using pre-built token for now (limited permissions)
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./MEGAsync-x86_64.AppImage
