@@ -32,10 +32,10 @@ jobs:
           # Consider using a personal access token with minimal permissions (e.g., repo)
           # stored in GitHub Secrets and referenced like this:
           # GITHUB_TOKEN: ${{ secrets.MY_RELEASE_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Using pre-built token for now (limited permissions)
+          GITHUB_TOKEN: ${{ github.token }}  # Using pre-built token for now (limited permissions)
         with:
-          tag_name: 'v1.0.0'  # Update this to a valid tag name
-          release_name: 'MEGAsync v1.0.0'  # Update this to a valid release name
+          tag_name: ${{ github.ref }}  # Update this to a valid tag name
+          release_name: ${{ github.ref }}  # Update this to a valid release name
           draft: false
           prerelease: false
 
@@ -44,7 +44,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           # Consider using a minimal scope token (same as create-release)
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Using pre-built token for now (limited permissions)
+          GITHUB_TOKEN: ${{ github.token }}  # Using pre-built token for now (limited permissions)
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./MEGAsync-x86_64.AppImage
