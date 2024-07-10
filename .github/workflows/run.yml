@@ -1,8 +1,13 @@
-name: Release
+name: manual trigger
 
 on:
   # Allow manual execution with the "Run workflow" button
   workflow_dispatch:
+
+on:
+  push:
+    tags:
+    - 'v[0-9].*'
 
 jobs:
   release:
