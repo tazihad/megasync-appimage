@@ -1,14 +1,14 @@
-name: Release
+name: run
 
 on:
   push:
     tags:
-    - 'v[0-9].*'
+    - '*'
   workflow_dispatch:
   
 jobs:
   release:
-    name: Release
+    name: run
     runs-on: ubuntu-22.04
     permissions:
       contents: write
