@@ -27,12 +27,13 @@ jobs:
       - name: Check if the latest tag is already in the repo
         id: check-tag
         run: |
-          if git rev-parse "$latest_tag" >/dev/null 2>&1; then
-            echo "The tag $latest_tag already exists in the repository. Skipping the build."
+          if git tag --list | grep -q "^${{ env.latest_tag }}$"; then
+            echo "The tag ${{ env.latest_tag }} already exists in the repository. Skipping the build."
             echo "skip_build=true" >> $GITHUB_ENV
           else
-            echo "The tag $latest_tag is not in the repository. Proceeding with the build."
+            echo "The tag ${{ env.latest_tag }} is not in the repository. Proceeding with the build."
             echo "skip_build=false" >> $GITHUB_ENV
+          fi
         shell: bash
 
       - name: Skip build if tag exists
