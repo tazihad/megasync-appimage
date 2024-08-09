@@ -4,6 +4,8 @@ on:
   push:
     tags:
     - 'v[0-9].*'
+  schedule:
+    - cron: '00 12 * * *'  
   workflow_dispatch:
 
 jobs:
