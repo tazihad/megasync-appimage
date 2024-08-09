@@ -8,7 +8,7 @@ on:
 
 jobs:
   release:
-    name: Release
+    name: Test
     runs-on: ubuntu-22.04
     permissions:
       contents: write
