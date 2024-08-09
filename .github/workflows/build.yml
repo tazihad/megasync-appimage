@@ -1,9 +1,11 @@
 name: build & release
 
 on:
+  schedule:
+      - cron: '00 20 * * *'  # 02:00am UTC+06 everyday
   push:
     tags:
-    - 'v[0-9]*'
+    - 'v[0-9].*'
   workflow_dispatch:
 
 jobs:
@@ -22,26 +24,41 @@ jobs:
         id: get-latest-tag
         run: |
           latest_tag=$(curl -s https://api.github.com/repos/meganz/MEGAsync/releases/latest | jq -r .tag_name)
-          if [[ ! $latest_tag =~ ^v[0-9].* ]]; then
-            echo "The tag does not match the required format. Exiting."
-            exit 1
-          fi
+          echo "Latest MEGAsync tag: $latest_tag"
           echo "latest_tag=$latest_tag" >> $GITHUB_ENV
 
+      - name: Check if the latest tag is already in the repo
+        id: check-tag
+        run: |
+          if git rev-parse "$latest_tag" >/dev/null 2>&1; then
+            echo "The tag $latest_tag already exists in the repository. Skipping the build."
+            echo "skip_build=true" >> $GITHUB_ENV
+          else
+            echo "The tag $latest_tag is not in the repository. Proceeding with the build."
+            echo "skip_build=false" >> $GITHUB_ENV
+
+      - name: Skip build if the tag already exists
+        if: env.skip_build == 'true'
+        run: exit 0
+
       - name: Install dependencies
+        if: env.skip_build == 'false'
         run: ./utils/dependencies.sh
 
       - name: Build MEGAsync
+        if: env.skip_build == 'false'
         run: ./utils/build.sh
 
       - name: Create AppImage
+        if: env.skip_build == 'false'
         run: ./utils/package.sh
 
       - name: Create GitHub release
+        if: env.skip_build == 'false'
         id: create-release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           tag_name: ${{ env.latest_tag }}
           release_name: ${{ env.latest_tag }}
@@ -49,10 +66,11 @@ jobs:
           prerelease: false
 
       - name: Upload AppImage
+        if: env.skip_build == 'false'
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./MEGAsync-x86_64.AppImage
@@ -60,6 +78,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Print URL
+        if: env.skip_build == 'false'
         run: |
           echo "Release: ${{ steps.create-release.outputs.html_url }}"
           echo "AppImage: ${{ steps.upload-release-asset.outputs.browser_download_url }}"
