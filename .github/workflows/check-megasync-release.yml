@@ -1,0 +1,35 @@
+name: Check and Build on MEGAsync Release
+
+on:
+  schedule:
+    # Runs every day at 00:00 UTC
+    - cron: '0 0 * * *'
+
+jobs:
+  check-megasync-release:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Get latest MEGAsync release tag
+        id: get-latest-tag
+        run: |
+          latest_tag=$(curl -s https://api.github.com/repos/meganz/MEGAsync/releases/latest | jq -r .tag_name)
+          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+
+      - name: Get previous release tag
+        id: get-prev-tag
+        run: |
+          prev_tag=$(git describe --tags --abbrev=0)
+          echo "prev_tag=$prev_tag" >> $GITHUB_ENV
+
+      - name: Compare tags and trigger build
+        run: |
+          if [ "${{ env.latest_tag }}" != "${{ env.prev_tag }}" ]; then
+            echo "New release found: ${{ env.latest_tag }}. Triggering build."
+            git tag "${{ env.latest_tag }}"
+            git push origin "${{ env.latest_tag }}"
+          else
+            echo "No new release found. Latest tag is still ${{ env.prev_tag }}."
+          fi
