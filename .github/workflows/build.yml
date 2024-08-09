@@ -3,7 +3,7 @@ name: build & release
 on:
   push:
     tags:
-    - 'v[0-9].*'
+    - 'v[0-9]*'
   workflow_dispatch:
 
 jobs:
@@ -22,6 +22,10 @@ jobs:
         id: get-latest-tag
         run: |
           latest_tag=$(curl -s https://api.github.com/repos/meganz/MEGAsync/releases/latest | jq -r .tag_name)
+          if [[ ! $latest_tag =~ ^v[0-9].* ]]; then
+            echo "The tag does not match the required format. Exiting."
+            exit 1
+          fi
           echo "latest_tag=$latest_tag" >> $GITHUB_ENV
 
       - name: Install dependencies
@@ -37,7 +41,7 @@ jobs:
         id: create-release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.latest_tag }}
           release_name: ${{ env.latest_tag }}
@@ -48,7 +52,7 @@ jobs:
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./MEGAsync-x86_64.AppImage
