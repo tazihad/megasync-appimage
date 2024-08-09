@@ -7,11 +7,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  check-megasync-release:
+  release:
+    name: build appimage and release
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: Get latest MEGAsync release tag
         id: get-latest-tag
