@@ -36,6 +36,7 @@ jobs:
           else
             echo "The tag $latest_tag is not in the repository. Proceeding with the build."
             echo "skip_build=false" >> $GITHUB_ENV
+        shell: bash
 
       - name: Skip build if the tag already exists
         if: env.skip_build == 'true'
