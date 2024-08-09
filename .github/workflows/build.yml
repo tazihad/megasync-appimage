@@ -1,4 +1,4 @@
-name: Release
+name: build & release
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   release:
-    name: Test
+    name: build appimage and release
     runs-on: ubuntu-22.04
     permissions:
       contents: write
