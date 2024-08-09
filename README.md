@@ -12,20 +12,8 @@ chmod +x MEGAsync-x86_64.AppImage
 ./MEGAsync-x86_64.AppImage
 ```
 
-## License
-
-### megasync-appimage utils
-
-Refer to `utils/UNLICENSE`
-
-### MEGA Desktop Application
-
-Refer to `MEGAsync/LICENCE.md`
-
-### Third party libraries used by MEGA Desktop Application
-
-Refer to `MEGAsync/CREDITS.md`
-
-### linuxdeploy
-
-Refer to `linuxdeploy/LICENSE.txt`
+## Autoupdate for GearLever
+Add source as github
+```
+https://github.com/tazihad/megasync-appimage/releases/download/*/MEGAsync-x86_64-*.AppImage
+```
