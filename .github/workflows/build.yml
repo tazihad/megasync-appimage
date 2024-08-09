@@ -1,73 +1,72 @@
-name: build & release
+name: Check and Build on MEGAsync Release
 
 on:
-  push:
-    tags:
-    - 'v[0-9].*'
   schedule:
-    - cron: '00 12 * * *'  
+    # Runs every day at 12:00 PM UTC
+    - cron: '0 12 * * *'
   workflow_dispatch:
 
 jobs:
-  release:
-    name: Build AppImage and Release
+  check-megasync-release:
     runs-on: ubuntu-22.04
-    permissions:
-      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
       - name: Get latest MEGAsync release tag
         id: get-latest-tag
         run: |
           latest_tag=$(curl -s https://api.github.com/repos/meganz/MEGAsync/releases/latest | jq -r .tag_name)
-          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+          echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
 
-      - name: Check if the latest tag is already in the repo
+      - name: List existing tags
+        id: list-tags
+        run: |
+          git fetch --tags
+          git tag --list
+        continue-on-error: true
+
+      - name: Check if latest tag exists
         id: check-tag
         run: |
-          if git tag --list | grep -q "^${{ env.latest_tag }}$"; then
-            echo "The tag ${{ env.latest_tag }} already exists in the repository. Skipping the build."
-            echo "skip_build=true" >> $GITHUB_ENV
+          if git tag --list | grep -q "^${{ env.LATEST_TAG }}$"; then
+            echo "The tag ${{ env.LATEST_TAG }} already exists in the repository. Skipping the build."
+            echo "SKIP_BUILD=true" >> $GITHUB_ENV
           else
-            echo "The tag ${{ env.latest_tag }} is not in the repository. Proceeding with the build."
-            echo "skip_build=false" >> $GITHUB_ENV
+            echo "The tag ${{ env.LATEST_TAG }} is not in the repository. Proceeding with the build."
+            echo "SKIP_BUILD=false" >> $GITHUB_ENV
           fi
-        shell: bash
 
       - name: Skip build if tag exists
-        if: ${{ env.skip_build == 'true' }}
+        if: ${{ env.SKIP_BUILD == 'true' }}
         run: echo "Build skipped due to existing tag."
 
       - name: Install dependencies
-        if: ${{ env.skip_build != 'true' }}
+        if: ${{ env.SKIP_BUILD != 'true' }}
         run: ./utils/dependencies.sh
 
       - name: Build MEGAsync
-        if: ${{ env.skip_build != 'true' }}
+        if: ${{ env.SKIP_BUILD != 'true' }}
         run: ./utils/build.sh
 
       - name: Create AppImage
-        if: ${{ env.skip_build != 'true' }}
+        if: ${{ env.SKIP_BUILD != 'true' }}
         run: ./utils/package.sh
 
       - name: Create GitHub release
-        if: ${{ env.skip_build != 'true' }}
+        if: ${{ env.SKIP_BUILD != 'true' }}
         id: create-release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.latest_tag }}
-          release_name: ${{ env.latest_tag }}
+          tag_name: ${{ env.LATEST_TAG }}
+          release_name: ${{ env.LATEST_TAG }}
           draft: false
           prerelease: false
 
       - name: Upload AppImage
-        if: ${{ env.skip_build != 'true' }}
+        if: ${{ env.SKIP_BUILD != 'true' }}
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
@@ -75,11 +74,11 @@ jobs:
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./MEGAsync-x86_64.AppImage
-          asset_name: MEGAsync-x86_64-${{ env.latest_tag }}.AppImage
+          asset_name: MEGAsync-x86_64-${{ env.LATEST_TAG }}.AppImage
           asset_content_type: application/octet-stream
 
       - name: Print URL
-        if: ${{ env.skip_build != 'true' }}
+        if: ${{ env.SKIP_BUILD != 'true' }}
         run: |
           echo "Release: ${{ steps.create-release.outputs.html_url }}"
           echo "AppImage: ${{ steps.upload-release-asset.outputs.browser_download_url }}"
