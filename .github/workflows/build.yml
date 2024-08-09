@@ -39,23 +39,23 @@ jobs:
         shell: bash
 
       - name: Skip build if tag exists
-        if: env.skip_build == 'true'
-        run: exit 0
+        if: ${{ env.skip_build == 'true' }}
+        run: echo "Build skipped due to existing tag."
 
       - name: Install dependencies
-        if: env.skip_build != 'true'
+        if: ${{ env.skip_build != 'true' }}
         run: ./utils/dependencies.sh
 
       - name: Build MEGAsync
-        if: env.skip_build != 'true'
+        if: ${{ env.skip_build != 'true' }}
         run: ./utils/build.sh
 
       - name: Create AppImage
-        if: env.skip_build != 'true'
+        if: ${{ env.skip_build != 'true' }}
         run: ./utils/package.sh
 
       - name: Create GitHub release
-        if: env.skip_build != 'true'
+        if: ${{ env.skip_build != 'true' }}
         id: create-release
         uses: actions/create-release@v1
         env:
@@ -67,7 +67,7 @@ jobs:
           prerelease: false
 
       - name: Upload AppImage
-        if: env.skip_build != 'true'
+        if: ${{ env.skip_build != 'true' }}
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
@@ -79,7 +79,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Print URL
-        if: env.skip_build != 'true'
+        if: ${{ env.skip_build != 'true' }}
         run: |
           echo "Release: ${{ steps.create-release.outputs.html_url }}"
           echo "AppImage: ${{ steps.upload-release-asset.outputs.browser_download_url }}"
